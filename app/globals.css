@@ -1,0 +1,47 @@
+@import "leaflet/dist/leaflet.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bt-gold: #f2c14e;
+  --bt-gold-bright: #ffdb5e;
+  --bt-bronze: #b8860b;
+  --bt-black: #050403;
+}
+
+body {
+  background-color: var(--bt-black);
+  color: #f5f3ef;
+}
+
+.bt-gradient-text {
+  background: linear-gradient(90deg, #ffdb5e, #f2c14e, #b8860b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bt-gold-btn {
+  background: linear-gradient(90deg, #ffdb5e, #f2c14e);
+  color: #0a0a0a;
+  font-weight: 700;
+}
+
+.bt-card {
+  background: rgba(12, 10, 6, 0.75);
+  border: 1px solid rgba(242, 193, 78, 0.25);
+  backdrop-filter: blur(6px);
+}
+
+.bt-glow {
+  box-shadow: 0 0 40px rgba(242, 193, 78, 0.25), 0 0 80px rgba(184, 134, 11, 0.15);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffdb5e, #b8860b);
+  border-radius: 8px;
+}
