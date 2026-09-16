@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { NavBar } from "@/components/nav-bar";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Blacktropolis — Find Your City's Hottest Events",
   description:

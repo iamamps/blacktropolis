@@ -5,14 +5,16 @@ import { generateId } from "@/lib/auth";
 import { getTicketTypesForEvent, addTicketType } from "@/lib/tickets-db";
 import { TicketType } from "@/types";
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
-  const ticketTypes = await getTicketTypesForEvent(params.id);
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const ticketTypes = await getTicketTypesForEvent(id);
   return NextResponse.json({ ticketTypes });
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  const event = await getEventById(params.id);
+  const { id } = await params;
+  const event = await getEventById(id);
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
   if (!session || session.id !== event.businessId) {
     return NextResponse.json({ error: "Not authorized." }, { status: 403 });
