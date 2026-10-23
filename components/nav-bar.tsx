@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Calendar, User, LogOut } from "lucide-react";
 import { Member } from "@/types";
+import { SITE_LOGO } from "@/lib/organizations";
 
 export function NavBar() {
   const pathname = usePathname();
@@ -29,17 +30,20 @@ export function NavBar() {
 
   const links = [
     { href: "/events", label: "Find Events" },
-    { href: "/business/join", label: "For Businesses" },
+    { href: "/#divine-nine", label: "The Nine" },
+    { href: "/schools", label: "Schools & HBCUs" },
+    { href: "/business/join", label: "For Organizers" },
   ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#f2c14e]/20 bg-[#050403]/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Blacktropolis" className="h-9 w-9 rounded-full" />
-          <span className="text-xl font-extrabold tracking-tight bt-gradient-text">
-            BLACKTROPOLIS
+          <img src={SITE_LOGO} alt="The Divine Nine Events" className="h-10 w-10 rounded-full" />
+          <span className="leading-none">
+            <span className="block text-lg font-extrabold tracking-tight bt-gradient-text">THE DIVINE NINE</span>
+            <span className="block text-[10px] font-bold tracking-[0.45em] text-gray-400">EVENTS</span>
           </span>
         </Link>
 
@@ -78,7 +82,7 @@ export function NavBar() {
           )}
         </nav>
 
-        <button className="md:hidden" onClick={() => setOpen(!open)}>
+        <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
           {open ? <X className="h-6 w-6 text-white" /> : <Menu className="h-6 w-6 text-white" />}
         </button>
       </div>
