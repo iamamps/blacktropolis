@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
-import { EventItem } from "@/types";
+import { DEFAULT_MEDIA } from "@/lib/media";
+import { EventItem, EventMediaSettings } from "@/types";
+import { OrgPicker } from "@/components/org-picker";
+import { SchoolFields } from "@/components/school-fields";
+import { MediaEditor } from "@/components/media-editor";
 
 interface EventFormProps {
   eventId?: string;
@@ -27,25 +30,45 @@ export function EventForm({ eventId, initial }: EventFormProps) {
     ticketLink: initial?.ticketLink || "",
     price: initial?.price || "",
   });
-  const [flyerDataUrl, setFlyerDataUrl] = useState<string | null>(
-    initial?.flyerDataUrl || null
-  );
+  const [organizations, setOrganizations] = useState<string[]>(initial?.organizations || []);
+  const [d9, setD9] = useState({
+    school: initial?.school || "",
+    chapter: initial?.chapter || "",
+    isHbcu: initial?.isHbcu || false,
+  });
+  const [media, setMedia] = useState<EventMediaSettings>({
+    mediaType: initial?.mediaType ?? DEFAULT_MEDIA.mediaType,
+    mediaUrl: initial?.mediaUrl ?? null,
+    posterUrl: initial?.posterUrl ?? null,
+    mediaAspect: initial?.mediaAspect ?? DEFAULT_MEDIA.mediaAspect,
+    mediaFit: initial?.mediaFit ?? DEFAULT_MEDIA.mediaFit,
+    mediaZoom: initial?.mediaZoom ?? DEFAULT_MEDIA.mediaZoom,
+    mediaX: initial?.mediaX ?? DEFAULT_MEDIA.mediaX,
+    mediaY: initial?.mediaY ?? DEFAULT_MEDIA.mediaY,
+    mediaSize: initial?.mediaSize ?? DEFAULT_MEDIA.mediaSize,
+  });
+  // Events created before photo storage existed keep their inline flyer until it is replaced or removed.
+  const [flyerDataUrl, setFlyerDataUrl] = useState<string | null>(initial?.flyerDataUrl || null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const update = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
-  const handleFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => setFlyerDataUrl(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
-    const payload = { ...form, flyerDataUrl };
+    if (organizations.length === 0) {
+      setError("Select at least one Divine Nine organization this event is for.");
+      return;
+    }
+    setLoading(true);
+    const payload = {
+      ...form,
+      ...d9,
+      organizations,
+      ...media,
+      flyerDataUrl: media.mediaUrl ? null : flyerDataUrl,
+    };
     const res = await fetch(eventId ? `/api/events/${eventId}` : "/api/events", {
       method: eventId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -65,7 +88,9 @@ export function EventForm({ eventId, initial }: EventFormProps) {
     "w-full rounded-xl bt-card px-4 py-3 text-white outline-none placeholder-gray-500";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <OrgPicker value={organizations} onChange={setOrganizations} />
+
       <input
         required
         placeholder="Event Title"
@@ -91,6 +116,14 @@ export function EventForm({ eventId, initial }: EventFormProps) {
           </option>
         ))}
       </select>
+
+      <SchoolFields
+        school={d9.school}
+        chapter={d9.chapter}
+        isHbcu={d9.isHbcu}
+        inputClass={inputClass}
+        onChange={(patch) => setD9((d) => ({ ...d, ...patch }))}
+      />
 
       <div className="grid grid-cols-2 gap-3">
         <input
@@ -159,20 +192,13 @@ export function EventForm({ eventId, initial }: EventFormProps) {
       </div>
 
       <div>
-        <label className="mb-2 flex cursor-pointer items-center gap-2 rounded-xl bt-card px-4 py-3 text-gray-300 hover:text-[#f2c14e]">
-          <Upload className="h-4 w-4" />
-          {flyerDataUrl ? "Change flyer image" : "Upload event flyer"}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          />
-        </label>
-        {flyerDataUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={flyerDataUrl} alt="Flyer preview" className="h-48 w-full rounded-xl object-cover" />
-        )}
+        <p className="mb-2 text-sm font-semibold text-white">Event photo, flyer or trailer</p>
+        <MediaEditor
+          value={media}
+          onChange={setMedia}
+          legacyImage={flyerDataUrl}
+          onClearLegacy={() => setFlyerDataUrl(null)}
+        />
       </div>
 
       {error && <p className="text-sm text-[#ef4444]">{error}</p>}
