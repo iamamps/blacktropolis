@@ -7,7 +7,7 @@ export default function ResidentSignupPage() {
         Become a <span className="bt-gradient-text">Resident</span>
       </h1>
       <p className="mb-8 text-gray-400">
-        Free membership — get your digital Blacktropolis ID and start discovering events.
+        Free membership — get your digital Divine Nine Events ID and start discovering events.
       </p>
       <SignupForm role="resident" />
     </div>

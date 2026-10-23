@@ -36,7 +36,7 @@ export default function LoginPage() {
       <h1 className="mb-2 text-3xl font-black text-white">
         Welcome <span className="bt-gradient-text">Back</span>
       </h1>
-      <p className="mb-8 text-gray-400">Sign in to your Blacktropolis account.</p>
+      <p className="mb-8 text-gray-400">Sign in to your Divine Nine Events account.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex items-center gap-2 rounded-xl bt-card px-4 py-3">
