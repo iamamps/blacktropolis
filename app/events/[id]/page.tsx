@@ -1,14 +1,27 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Calendar, Clock, MapPin, Ticket, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, MapPin, Ticket, ArrowLeft, GraduationCap } from "lucide-react";
 import { getEventById } from "@/lib/db";
+import { getOrganizations } from "@/lib/orgs-db";
+import { isAdminAuthed } from "@/lib/admin-auth";
+import { getSession } from "@/lib/auth";
 import { EventMapWrapper } from "@/components/event-map-wrapper";
 import { TicketPurchase } from "@/components/ticket-purchase";
+import { EventMedia } from "@/components/event-media";
+import { OrgLogo } from "@/components/org-logo";
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const event = await getEventById(id);
   if (!event) notFound();
+  if (event.isHidden) {
+    const session = await getSession();
+    if (!(await isAdminAuthed()) && session?.id !== event.businessId) notFound();
+  }
+  const allOrgs = await getOrganizations();
+  const eventOrgs = event.organizations
+    .map((slug) => allOrgs.find((o) => o.slug === slug))
+    .filter((o): o is NonNullable<typeof o> => !!o);
 
   const dateLabel = event.date
     ? new Date(event.date + "T00:00:00").toLocaleDateString("en-US", {
@@ -30,25 +43,48 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       </Link>
 
       <div className="overflow-hidden rounded-2xl bt-card">
-        <div className="relative h-72 w-full bg-gradient-to-br from-[#cbd5e1]/20 to-[#f2c14e]/20">
-          {event.flyerDataUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={event.flyerDataUrl} alt={event.title} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-6xl font-black text-white/20">
-              BT
-            </div>
-          )}
+        <div className="bg-black/50 p-3 sm:p-4">
+          <EventMedia
+            media={{ ...event, flyerDataUrl: event.flyerDataUrl ? `/api/events/${event.id}/flyer` : null }}
+            title={event.title}
+            mode="detail"
+          />
         </div>
 
         <div className="space-y-6 p-6">
           <div>
-            <span className="mb-2 inline-block rounded-full bg-[#f2c14e]/15 px-3 py-1 text-xs font-semibold text-[#f2c14e]">
-              {event.category}
-            </span>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="inline-block rounded-full bg-[#f2c14e]/15 px-3 py-1 text-xs font-semibold text-[#f2c14e]">
+                {event.category}
+              </span>
+              {event.isHbcu && (
+                <span className="inline-block rounded-full bg-[#7b3fbf]/25 px-3 py-1 text-xs font-semibold text-purple-200">
+                  HBCU
+                </span>
+              )}
+              {event.isHidden && (
+                <span className="inline-block rounded-full bg-[#ef4444]/20 px-3 py-1 text-xs font-semibold text-[#ef4444]">
+                  Hidden from public
+                </span>
+              )}
+            </div>
             <h1 className="text-3xl font-black text-white">{event.title}</h1>
             <p className="mt-1 text-gray-400">Hosted by {event.businessName}</p>
           </div>
+
+          {eventOrgs.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {eventOrgs.map((o) => (
+                <Link
+                  key={o.slug}
+                  href={`/organizations/${o.slug}`}
+                  className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 py-1.5 pl-1.5 pr-4 text-sm font-semibold text-gray-100 hover:border-[#f2c14e]"
+                >
+                  <OrgLogo org={o} size={32} ring={false} /> {o.short}
+                </Link>
+              ))}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <InfoRow icon={<Calendar className="h-5 w-5 text-[#f2c14e]" />} label="Date" value={dateLabel} />
@@ -60,6 +96,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             />
             {event.price && (
               <InfoRow icon={<Ticket className="h-5 w-5 text-[#f2c14e]" />} label="Price" value={event.price} />
+            )}
+            {(event.school || event.chapter) && (
+              <InfoRow
+                icon={<GraduationCap className="h-5 w-5 text-[#f2c14e]" />}
+                label="Campus / Chapter"
+                value={[event.school, event.chapter].filter(Boolean).join(" · ")}
+              />
             )}
           </div>
 

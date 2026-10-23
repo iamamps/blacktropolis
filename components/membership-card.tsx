@@ -15,7 +15,7 @@ export function MembershipCard({ member }: { member: Member }) {
       <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-[#b8860b]/25 blur-3xl" />
 
       <div className="relative flex items-center justify-between">
-        <span className="text-sm font-black tracking-widest bt-gradient-text">BLACKTROPOLIS</span>
+        <span className="text-sm font-black tracking-widest bt-gradient-text">THE DIVINE NINE</span>
         <span
           className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${
             member.membershipTier === "paid"

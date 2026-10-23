@@ -29,7 +29,7 @@ export async function geocodeCity(query: string): Promise<GeoResult | null> {
       `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=${encodeURIComponent(
         query
       )}`,
-      { headers: { "User-Agent": "Blacktropolis-App/1.0" } }
+      { headers: { "User-Agent": "DivineNineEvents/1.0" } }
     );
     if (!res.ok) return null;
     const data = await res.json();

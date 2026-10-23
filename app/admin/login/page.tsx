@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
       setError("Incorrect passcode.");
       return;
     }
-    router.push("/admin/ads");
+    router.push("/admin/events");
     router.refresh();
   };
 

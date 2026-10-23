@@ -1,4 +1,14 @@
 export const CATEGORIES = [
+  "Mixer / Party",
+  "Step Show",
+  "Homecoming",
+  "Greek Show",
+  "Founders' Day",
+  "Convention / Conference",
+  "Service & Philanthropy",
+  "Scholarship Gala",
+  "Cookout / Picnic",
+  // earlier categories kept so existing events stay filterable
   "Nightlife",
   "Live Music",
   "Comedy",

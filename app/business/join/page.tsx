@@ -7,18 +7,18 @@ export default function BusinessJoinPage() {
       <div>
         <Building className="mb-4 h-9 w-9 text-[#f2c14e]" />
         <h1 className="mb-3 text-3xl font-black text-white">
-          Join the <span className="bt-gradient-text">Business Network</span>
+          Become an <span className="bt-gradient-text">Organizer</span>
         </h1>
         <p className="mb-6 text-gray-400">
-          Create your free account first, then activate your paid Blacktropolis Network
-          membership from your dashboard to start posting events.
+          Create your free account first, then activate your paid organizer membership from your
+          dashboard to start posting Divine Nine events.
         </p>
         <ul className="space-y-3 text-sm text-gray-300">
           {[
-            "Post unlimited parties & events with flyers",
+            "Post step shows, homecomings, mixers & more with photos, flyers or video trailers",
             "Sell tickets and check in guests by QR code",
-            "Reach residents searching your city",
-            "Get a digital Blacktropolis Business ID card",
+            "Reach the Divine Nine community searching your campus, HBCU or city",
+            "Get a digital Divine Nine Events organizer ID card",
             "Manage all your events from one dashboard",
           ].map((item) => (
             <li key={item} className="flex items-start gap-2">

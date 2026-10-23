@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Trash, CheckCircle2, Star } from "lucide-react";
+import { AdminNav } from "@/components/admin-nav";
 
 interface SiteAd {
   id: string;
@@ -89,6 +90,8 @@ export default function AdminAdsPage() {
   };
 
   return (
+    <div>
+      <AdminNav current="/admin/ads" />
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="mb-6 text-3xl font-black text-white">
         Homepage <span className="bt-gradient-text">Ad</span>
@@ -172,6 +175,7 @@ export default function AdminAdsPage() {
           ))
         )}
       </div>
+    </div>
     </div>
   );
 }

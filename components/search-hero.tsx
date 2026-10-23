@@ -36,7 +36,7 @@ export function SearchHero() {
         <input
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          placeholder="Enter your city or zip code"
+          placeholder="City or zip code"
           className="w-full bg-transparent text-white placeholder-gray-500 outline-none"
         />
       </div>

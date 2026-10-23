@@ -38,7 +38,7 @@ export async function sendTicketEmail(
   const html = `
   <div style="background:#050403;padding:32px;font-family:Arial,sans-serif;color:#f5f3ef;">
     <div style="max-width:480px;margin:0 auto;background:#0c0a06;border:1px solid #f2c14e40;border-radius:16px;padding:24px;text-align:center;">
-      <h1 style="color:#f2c14e;font-size:22px;margin-bottom:4px;">BLACKTROPOLIS</h1>
+      <h1 style="color:#f2c14e;font-size:22px;margin-bottom:4px;">THE DIVINE NINE EVENTS</h1>
       <p style="color:#9ca3af;margin-top:0;">Your ticket is confirmed</p>
       <h2 style="color:#ffffff;margin-bottom:4px;">${event.title}</h2>
       <p style="color:#9ca3af;margin:4px 0;">${dateLabel} ${event.time ? "· " + event.time : ""}</p>
@@ -77,7 +77,7 @@ export async function sendPasswordResetEmail(
   const html = `
   <div style="background:#050403;padding:32px;font-family:Arial,sans-serif;color:#f5f3ef;">
     <div style="max-width:480px;margin:0 auto;background:#0c0a06;border:1px solid #f2c14e40;border-radius:16px;padding:24px;text-align:center;">
-      <h1 style="color:#f2c14e;font-size:22px;margin-bottom:4px;">BLACKTROPOLIS</h1>
+      <h1 style="color:#f2c14e;font-size:22px;margin-bottom:4px;">THE DIVINE NINE EVENTS</h1>
       <p style="color:#9ca3af;margin-top:0;">Password Reset Request</p>
       <p style="color:#e5e7eb;margin:20px 0;">Hi ${name || "there"}, we received a request to reset your password. This link expires in 1 hour.</p>
       <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(90deg,#ffdb5e,#f2c14e);color:#0a0a0a;font-weight:bold;padding:12px 28px;border-radius:999px;text-decoration:none;">Reset Password</a>
@@ -88,7 +88,7 @@ export async function sendPasswordResetEmail(
   await getTransporter().sendMail({
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: toEmail,
-    subject: "Reset your Blacktropolis password",
+    subject: "Reset your Divine Nine Events password",
     html,
   });
 }
