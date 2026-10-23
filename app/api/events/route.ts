@@ -4,14 +4,21 @@ import { getSession } from "@/lib/auth";
 import { generateId } from "@/lib/auth";
 import { distanceMiles, geocodeLocation } from "@/lib/geocode";
 import { EventItem } from "@/types";
+import { ORG_SLUGS } from "@/lib/organizations";
+import { parseDivineNineFields } from "@/lib/event-input";
+import { DEFAULT_MEDIA } from "@/lib/media";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const location = searchParams.get("location");
   const category = searchParams.get("category");
   const search = searchParams.get("search");
+  const orgParam = searchParams.get("org");
+  const school = searchParams.get("school");
+  const hbcuOnly = searchParams.get("hbcu") === "1";
+  const org = orgParam && ORG_SLUGS.includes(orgParam) ? orgParam : null;
 
-  let events = await getEvents();
+  let events = await getEvents({ org, school, hbcuOnly });
 
   if (category && category !== "all") {
     events = events.filter((e) => e.category === category);
@@ -22,7 +29,9 @@ export async function GET(request: Request) {
       (e) =>
         e.title.toLowerCase().includes(q) ||
         e.description.toLowerCase().includes(q) ||
-        e.businessName.toLowerCase().includes(q)
+        e.businessName.toLowerCase().includes(q) ||
+        e.school.toLowerCase().includes(q) ||
+        e.chapter.toLowerCase().includes(q)
     );
   }
 
@@ -52,13 +61,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session || session.role !== "business") {
-    return NextResponse.json({ error: "Only business members can post events." }, { status: 403 });
+    return NextResponse.json({ error: "Only organizer accounts can post events." }, { status: 403 });
   }
   const member = await getMemberById(session.id);
   if (!member) return NextResponse.json({ error: "Member not found." }, { status: 404 });
   if (member.membershipTier !== "paid") {
     return NextResponse.json(
-      { error: "An active paid Blacktropolis membership is required to post events." },
+      { error: "An active paid membership is required to post events." },
       { status: 402 }
     );
   }
@@ -84,6 +93,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
 
+  const d9 = parseDivineNineFields(body);
+  if (!d9.ok) return NextResponse.json({ error: d9.error }, { status: 400 });
+  if (!d9.fields.organizations || d9.fields.organizations.length === 0) {
+    return NextResponse.json(
+      { error: "Select at least one Divine Nine organization this event is for." },
+      { status: 400 }
+    );
+  }
+
   const geo = await geocodeLocation(`${zip}`);
   const fallbackGeo = geo || (await geocodeLocation(`${city}, ${state}`));
 
@@ -107,6 +125,13 @@ export async function POST(request: Request) {
     ticketLink: ticketLink || "",
     price: price || "",
     createdAt: new Date().toISOString(),
+    organizations: [],
+    school: "",
+    isHbcu: false,
+    chapter: "",
+    isHidden: false,
+    ...DEFAULT_MEDIA,
+    ...d9.fields,
   };
 
   await addEvent(event);
