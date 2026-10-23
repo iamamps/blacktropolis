@@ -1,21 +1,5 @@
-import { Pool } from "pg";
-import { Member, EventItem } from "@/types";
-
-declare global {
-  // eslint-disable-next-line no-var
-  var _btPool: Pool | undefined;
-}
-
-function getPool(): Pool {
-  if (!global._btPool) {
-    global._btPool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-      max: 5,
-    });
-  }
-  return global._btPool;
-}
+import { Member, EventItem, MediaAspect, MediaFit, MediaSize, MediaType } from "@/types";
+import { getPool } from "@/lib/pool";
 
 function rowToMember(row: Record<string, unknown>): Member {
   return {
@@ -63,6 +47,20 @@ function rowToEvent(row: Record<string, unknown>): EventItem {
     ticketLink: (row.ticket_link as string) || "",
     price: (row.price as string) || "",
     createdAt: new Date(row.created_at as string).toISOString(),
+    organizations: (row.organizations as string[]) || [],
+    school: (row.school as string) || "",
+    isHbcu: Boolean(row.is_hbcu),
+    chapter: (row.chapter as string) || "",
+    isHidden: Boolean(row.is_hidden),
+    mediaType: ((row.media_type as string) || "image") as MediaType,
+    mediaUrl: (row.media_url as string) || null,
+    posterUrl: (row.poster_url as string) || null,
+    mediaAspect: ((row.media_aspect as string) || "original") as MediaAspect,
+    mediaFit: ((row.media_fit as string) || "cover") as MediaFit,
+    mediaZoom: row.media_zoom != null ? Number(row.media_zoom) : 1,
+    mediaX: row.media_x != null ? Number(row.media_x) : 50,
+    mediaY: row.media_y != null ? Number(row.media_y) : 50,
+    mediaSize: ((row.media_size as string) || "full") as MediaSize,
   };
 }
 
@@ -147,9 +145,55 @@ export async function updateMember(id: string, patch: Partial<Member>): Promise<
   return merged;
 }
 
-export async function getEvents(): Promise<EventItem[]> {
-  const { rows } = await getPool().query("select * from events order by date asc");
+const LIST_COLUMNS = `id, business_id, business_name, title, description, category, date, time, venue_name, address, city, state, zip, lat, lng,
+  (case when flyer_data_url is not null and flyer_data_url <> '' then '/api/events/' || id || '/flyer' else null end) as flyer_data_url,
+  ticket_link, price, created_at, organizations, school, is_hbcu, chapter, media_type, media_url, poster_url, media_aspect, media_fit, media_zoom, media_x, media_y, media_size, is_hidden`;
+
+export interface EventFilters {
+  org?: string | null;
+  school?: string | null;
+  hbcuOnly?: boolean;
+  includeHidden?: boolean;
+}
+
+/** Public event list. Hidden events are excluded unless includeHidden is set (admin). */
+export async function getEvents(filters: EventFilters = {}): Promise<EventItem[]> {
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (!filters.includeHidden) where.push("is_hidden = false");
+  if (filters.org) {
+    params.push(filters.org);
+    where.push(`$${params.length} = any(organizations)`);
+  }
+  if (filters.school) {
+    params.push(filters.school);
+    where.push(`lower(school) = lower($${params.length})`);
+  }
+  if (filters.hbcuOnly) where.push("is_hbcu = true");
+  // The legacy inline flyer (base64) is replaced by a lightweight image URL so lists stay small.
+  const sql = `select ${LIST_COLUMNS} from events ${where.length ? "where " + where.join(" and ") : ""} order by date asc`;
+  const { rows } = await getPool().query(sql, params);
   return rows.map(rowToEvent);
+}
+
+/** Events per organization (public, non-hidden) for the homepage badges. */
+export async function getOrgEventCounts(): Promise<Record<string, number>> {
+  const { rows } = await getPool().query(
+    `select o as slug, count(*)::int as n from events, unnest(organizations) as o where is_hidden = false group by o`
+  );
+  const out: Record<string, number> = {};
+  for (const r of rows) out[r.slug as string] = Number(r.n);
+  return out;
+}
+
+/** Schools that have at least one public event. */
+export async function getSchoolsWithEvents(): Promise<{ school: string; n: number; isHbcu: boolean }[]> {
+  const { rows } = await getPool().query(
+    `select min(school) as school, count(*)::int as n, bool_or(is_hbcu) as is_hbcu
+       from events where is_hidden = false and school <> ''
+       group by lower(school) order by n desc, min(school) asc`
+  );
+  return rows.map((r) => ({ school: r.school as string, n: Number(r.n), isHbcu: Boolean(r.is_hbcu) }));
 }
 
 export async function getEventById(id: string): Promise<EventItem | undefined> {
@@ -160,8 +204,10 @@ export async function getEventById(id: string): Promise<EventItem | undefined> {
 export async function addEvent(event: EventItem): Promise<EventItem> {
   await getPool().query(
     `insert into events
-      (id, business_id, business_name, title, description, category, date, time, venue_name, address, city, state, zip, lat, lng, flyer_data_url, ticket_link, price, created_at)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+      (id, business_id, business_name, title, description, category, date, time, venue_name, address, city, state, zip, lat, lng, flyer_data_url, ticket_link, price, created_at,
+       organizations, school, is_hbcu, chapter, media_type, media_url, poster_url, media_aspect, media_fit, media_zoom, media_x, media_y, media_size, is_hidden)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,
+             $20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33)`,
     [
       event.id,
       event.businessId,
@@ -182,6 +228,20 @@ export async function addEvent(event: EventItem): Promise<EventItem> {
       event.ticketLink,
       event.price,
       event.createdAt,
+      event.organizations,
+      event.school,
+      event.isHbcu,
+      event.chapter,
+      event.mediaType,
+      event.mediaUrl,
+      event.posterUrl,
+      event.mediaAspect,
+      event.mediaFit,
+      event.mediaZoom,
+      event.mediaX,
+      event.mediaY,
+      event.mediaSize,
+      event.isHidden,
     ]
   );
   return event;
@@ -192,7 +252,8 @@ export async function updateEvent(id: string, patch: Partial<EventItem>): Promis
   if (!existing) return null;
   const merged = { ...existing, ...patch };
   await getPool().query(
-    `update events set title=$2, description=$3, category=$4, date=$5, time=$6, venue_name=$7, address=$8, city=$9, state=$10, zip=$11, lat=$12, lng=$13, flyer_data_url=$14, ticket_link=$15, price=$16
+    `update events set title=$2, description=$3, category=$4, date=$5, time=$6, venue_name=$7, address=$8, city=$9, state=$10, zip=$11, lat=$12, lng=$13, flyer_data_url=$14, ticket_link=$15, price=$16,
+       organizations=$17, school=$18, is_hbcu=$19, chapter=$20, media_type=$21, media_url=$22, poster_url=$23, media_aspect=$24, media_fit=$25, media_zoom=$26, media_x=$27, media_y=$28, media_size=$29, is_hidden=$30
      where id=$1`,
     [
       id,
@@ -211,6 +272,20 @@ export async function updateEvent(id: string, patch: Partial<EventItem>): Promis
       merged.flyerDataUrl,
       merged.ticketLink,
       merged.price,
+      merged.organizations,
+      merged.school,
+      merged.isHbcu,
+      merged.chapter,
+      merged.mediaType,
+      merged.mediaUrl,
+      merged.posterUrl,
+      merged.mediaAspect,
+      merged.mediaFit,
+      merged.mediaZoom,
+      merged.mediaX,
+      merged.mediaY,
+      merged.mediaSize,
+      merged.isHidden,
     ]
   );
   return merged;
@@ -238,4 +313,10 @@ export async function getStats() {
     paidBusinesses: Number(r.paid_businesses),
     totalEvents: Number(r.total_events),
   };
+}
+
+/** Raw legacy flyer data-URL for the image route. */
+export async function getLegacyFlyer(id: string): Promise<string | null> {
+  const { rows } = await getPool().query("select flyer_data_url from events where id = $1", [id]);
+  return (rows[0]?.flyer_data_url as string) || null;
 }
