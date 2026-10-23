@@ -22,8 +22,30 @@ export interface Member {
   resetTokenExpires?: string | null;
 }
 
-export interface EventItem {
+export type MediaType = "image" | "video_url" | "video_upload";
+export type MediaAspect = "original" | "16:9" | "4:5" | "1:1" | "9:16";
+export type MediaFit = "cover" | "contain";
+export type MediaSize = "sm" | "md" | "lg" | "full";
+
+export interface EventMediaSettings {
+  mediaType: MediaType;
+  mediaUrl: string | null;
+  posterUrl: string | null;
+  mediaAspect: MediaAspect;
+  mediaFit: MediaFit;
+  mediaZoom: number;
+  mediaX: number;
+  mediaY: number;
+  mediaSize: MediaSize;
+}
+
+export interface EventItem extends EventMediaSettings {
   id: string;
+  organizations: string[];
+  school: string;
+  isHbcu: boolean;
+  chapter: string;
+  isHidden: boolean;
   businessId: string;
   businessName: string;
   title: string;

@@ -20,13 +20,31 @@ export function generateMembershipId(): string {
   return `BT-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 }
 
+// Sessions are HMAC-signed so a cookie cannot be forged by editing its contents.
+function sign(data: string): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) throw new Error("SESSION_SECRET is not configured.");
+  return crypto.createHmac("sha256", secret).update(data).digest("base64url");
+}
+
 export function encodeSession(payload: SessionPayload): string {
-  return Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return `${body}.${sign(body)}`;
 }
 
 export function decodeSession(token: string): SessionPayload | null {
   try {
-    return JSON.parse(Buffer.from(token, "base64url").toString("utf-8"));
+    const [body, sig] = token.split(".");
+    if (!body || !sig) return null;
+    const expected = sign(body);
+    const a = Buffer.from(sig);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf-8"));
+    if (!payload || typeof payload.id !== "string" || (payload.role !== "resident" && payload.role !== "business")) {
+      return null;
+    }
+    return payload as SessionPayload;
   } catch {
     return null;
   }

@@ -1,20 +1,5 @@
-import { Pool } from "pg";
+import { getPool } from "@/lib/pool";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var _btPool: Pool | undefined;
-}
-
-function getPool(): Pool {
-  if (!global._btPool) {
-    global._btPool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-      max: 5,
-    });
-  }
-  return global._btPool;
-}
 
 export interface SiteAd {
   id: string;
