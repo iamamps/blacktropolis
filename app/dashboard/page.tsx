@@ -121,7 +121,7 @@ function DashboardInner() {
                 <Zap className="h-4 w-4" /> Activate Paid Membership
               </p>
               <p className="text-xs text-gray-400">
-                Subscribe to the Blacktropolis Business Network to unlock event posting. You'll
+                Join the paid organizer network to unlock event posting. You'll
                 be redirected to a secure Stripe checkout.
               </p>
               <button
@@ -152,7 +152,7 @@ function DashboardInner() {
           )}
           {member.role === "business" && member.membershipTier === "paid" && (
             <div className="mt-4 flex items-center gap-2 rounded-2xl bt-card p-4 text-sm text-[#f2c14e]">
-              <CheckCircle className="h-4 w-4" /> Active Blacktropolis Business Membership
+              <CheckCircle className="h-4 w-4" /> Active Organizer Membership
             </div>
           )}
           {searchParams.get("upgrade") === "cancelled" && (
