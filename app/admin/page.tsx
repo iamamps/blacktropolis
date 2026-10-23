@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Users, Building, CreditCard, Calendar } from "lucide-react";
+import { AdminNav } from "@/components/admin-nav";
 
 interface Stats {
   totalMembers: number;
@@ -36,6 +37,8 @@ export default function AdminPage() {
     : [];
 
   return (
+    <div>
+      <AdminNav current="/admin" />
     <div className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="mb-2 text-3xl font-black text-white">
         Data <span className="bt-gradient-text">Overview</span>
@@ -52,6 +55,7 @@ export default function AdminPage() {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 }
