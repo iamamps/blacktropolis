@@ -5,7 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Calendar, User, LogOut } from "lucide-react";
 import { Member } from "@/types";
-import { SITE_LOGO } from "@/lib/organizations";
+import { BRAND_ASSET_BASE } from "@/lib/organizations";
+
+// Main brand crest (includes the "Divine Nine" wordmark), hosted in storage under brand/.
+const SITE_CREST = `${BRAND_ASSET_BASE}/logo-main.png`;
 
 export function NavBar() {
   const pathname = usePathname();
@@ -37,14 +40,15 @@ export function NavBar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#f2c14e]/20 bg-[#050403]/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-2.5">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2">
+        <Link href="/" className="flex items-center gap-3" aria-label="The Divine Nine Events — home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={SITE_LOGO} alt="The Divine Nine Events" className="h-10 w-10 rounded-full" />
-          <span className="leading-none">
-            <span className="block text-lg font-extrabold tracking-tight bt-gradient-text">THE DIVINE NINE</span>
-            <span className="block text-[10px] font-bold tracking-[0.45em] text-gray-400">EVENTS</span>
-          </span>
+          <img
+            src={SITE_CREST}
+            alt="The Divine Nine crest"
+            className="h-20 w-20 rounded-2xl sm:h-24 sm:w-24"
+          />
+          <span className="text-sm font-extrabold tracking-[0.45em] text-[#f2c14e] sm:text-base">EVENTS</span>
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
